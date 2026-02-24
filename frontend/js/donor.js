@@ -1,6 +1,6 @@
 const API = "http://localhost:5000/donor";
 
-import { auth } from "./firebase.js";
+
 
 let currentUser;
 

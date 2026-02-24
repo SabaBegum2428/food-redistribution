@@ -1,4 +1,4 @@
-const { db } = require("../config/firebaseAdmin");
+
 
 // CREATE DONATION
 exports.createDonation = async (req, res) => {

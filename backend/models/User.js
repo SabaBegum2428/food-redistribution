@@ -1,36 +1,24 @@
-const { db } = require("../config/firebaseAdmin");
+const mongoose = require("mongoose");
 
-/*
-  Firestore collection: users
-  Document ID: uid
-*/
-
-const User = {
-
-  /* CREATE USER */
-  async createUser(uid, data) {
-    return await db.collection("users").doc(uid).set({
-      name: data.name,
-      email: data.email,
-      role: data.role,
-      createdAt: new Date()
-    });
+const userSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true
   },
-
-  /* GET USER BY UID */
-  async getUser(uid) {
-    const doc = await db.collection("users").doc(uid).get();
-
-    if (!doc.exists) return null;
-
-    return doc.data();
+  email: {
+    type: String,
+    required: true,
+    unique: true
   },
-
-  /* UPDATE USER */
-  async updateUser(uid, data) {
-    return await db.collection("users").doc(uid).update(data);
+  password: {
+    type: String,
+    required: true
+  },
+  role: {
+    type: String,
+    enum: ["donor", "ngo", "admin"],
+    default: "donor"
   }
+}, { timestamps: true });
 
-};
-
-module.exports = User;
+module.exports = mongoose.model("User", userSchema);

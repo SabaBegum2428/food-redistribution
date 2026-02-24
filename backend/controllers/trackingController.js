@@ -1,4 +1,4 @@
-const { db } = require("../config/firebaseAdmin");
+
 
 // Update latest location + optional history
 exports.updateLocation = async (req, res) => {
