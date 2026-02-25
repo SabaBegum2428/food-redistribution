@@ -1,13 +1,28 @@
-const router = require("express").Router();
-const ctrl = require("../controllers/ngoController");
+const express = require("express");
+const Donation = require("../models/Donation");
 
-/* 📦 GET AVAILABLE DONATIONS */
-router.get("/available", ctrl.getAvailablePickups);
+const router = express.Router();
 
-/* ✅ NGO RESPONDS TO DONATION */
-router.post("/respond", ctrl.acceptPickup);
+// NGO Accept Donation
+router.put("/accept/:id", async (req, res) => {
+  try {
+    const { ngoId } = req.body;
 
-/* 👤 ASSIGN VOLUNTEER */
-router.post("/assign", ctrl.updateTracking);
+    const donation = await Donation.findById(req.params.id);
+    if (!donation) {
+      return res.status(404).json({ message: "Donation not found" });
+    }
+
+    donation.status = "Accepted";
+    donation.assignedNgo = ngoId;
+
+    await donation.save();
+
+    res.json({ message: "Donation accepted successfully" });
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 module.exports = router;

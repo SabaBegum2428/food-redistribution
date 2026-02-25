@@ -1,75 +1,33 @@
+const Donation = require("../models/Donation");
 
-
-// CREATE DONATION
 exports.createDonation = async (req, res) => {
   try {
-    const data = req.body;
+    const { foodType, quantity, location, expiryDate, ngoId } = req.body;
 
-    data.status = "pending";
-    data.createdAt = new Date();
+    const donation = await Donation.create({
+      foodType,
+      quantity,
+      location,
+      expiryDate,
+      ngoId,
+      donorId: req.user?.id // optional if using auth middleware
+    });
 
-    const doc = await db.collection("donations").add(data);
+    res.status(201).json(donation);
 
-    res.json({ message: "Donation created", id: doc.id });
-  } catch (err) {
-    res.status(500).json(err.message);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to create donation" });
   }
 };
-
-// DONATION HISTORY
-exports.getDonationHistory = async (req, res) => {
+exports.getNgoDonations = async (req, res) => {
   try {
-    const donorId = req.params.donorId;
+    const { ngoId } = req.params;
 
-    const snapshot = await db
-      .collection("donations")
-      .where("donorId", "==", donorId)
-      .get();
+    const donations = await Donation.find({ ngoId });
 
-    let list = [];
-    snapshot.forEach(doc => list.push({ id: doc.id, ...doc.data() }));
+    res.json(donations);
 
-    res.json(list);
-  } catch (err) {
-    res.status(500).json(err.message);
-  }
-};
-
-// ACTIVE PICKUP
-exports.getActivePickup = async (req, res) => {
-  try {
-    const donorId = req.params.donorId;
-
-    const snapshot = await db
-      .collection("donations")
-      .where("donorId", "==", donorId)
-      .where("status", "in", ["accepted", "assigned", "picked"])
-      .get();
-
-    let list = [];
-    snapshot.forEach(doc => list.push({ id: doc.id, ...doc.data() }));
-
-    res.json(list);
-  } catch (err) {
-    res.status(500).json(err.message);
-  }
-};
-
-// IMPACT SCORE
-exports.getImpact = async (req, res) => {
-  try {
-    const donorId = req.params.donorId;
-
-    const snapshot = await db
-      .collection("donations")
-      .where("donorId", "==", donorId)
-      .where("status", "==", "delivered")
-      .get();
-
-    let count = snapshot.size;
-
-    res.json({ totalDeliveries: count, impactScore: count * 10 });
-  } catch (err) {
-    res.status(500).json(err.message);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch donations" });
   }
 };

@@ -4,7 +4,7 @@
   <title>Donor Dashboard</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
+<body class="donor-page">
 
 <div class="navbar">
   <h2>Food Redistribution</h2>
@@ -19,12 +19,12 @@
 
     <div class="card">
       <h3>Total Donations</h3>
-      <h1 id="totalDonations">0</h1>
+<h1 id="totalDonations">0</h1>
     </div>
 
     <div class="card">
       <h3>Meals Donated</h3>
-      <h1 id="totalMeals">0</h1>
+      <h1 id="mealsDonated">0</h1>
     </div>
 
     <div class="card">
@@ -39,7 +39,7 @@
   <div class="card">
     <h3>Post New Donation</h3>
 
-    <input id="foodType" placeholder="Food Type">
+    <input id="foodType" placeholder="Donation Type">
     <input id="quantity" placeholder="Quantity">
     <input id="location" placeholder="Pickup Location">
 
@@ -50,14 +50,14 @@
 
   <div class="card">
     <h3>Donation History</h3>
-    <div id="historyList"></div>
+    <div id="donationHistory"></div>
   </div>
 
 </div>
 
 <!-- ✅ FIXED SCRIPT -->
-<script type="module" src="js/donor.js"></script>
 <script type="module" src="js/auth.js"></script>
+<script type="module" src="js/donor.js"></script>
 
 </body>
 </html>

@@ -4,6 +4,9 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 
 const authRoutes = require("./routes/authRoutes");
+const donationRoutes = require("./routes/donationRoutes");
+const donorRoutes = require("./routes/donorRoutes");
+const ngoRoutes = require("./routes/ngoRoutes");
 
 const app = express();
 
@@ -12,10 +15,15 @@ app.use(express.json());
 
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB Connected"))
-  .catch(err => console.log(err));
+  .catch(err => console.log("DB Error:", err));
 
 app.use("/api/auth", authRoutes);
+app.use("/api/donations", donationRoutes);
+app.use("/api/donor", donorRoutes);
+app.use("/api/ngo", ngoRoutes);
 
-app.listen(5000, () => {
-  console.log("Server running on port 5000");
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });

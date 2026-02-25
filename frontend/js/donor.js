@@ -1,144 +1,148 @@
-const API = "http://localhost:5000/donor";
+// ==============================
+// DONOR DASHBOARD SCRIPT
+// ==============================
 
+const donorId = localStorage.getItem("donorId");
 
-
-let currentUser;
-
-/* 🔐 CHECK LOGIN */
-auth.onAuthStateChanged(async (user) => {
-
-  if (!user) {
-    window.location.href = "login.html";
-    return;
-  }
-
-  currentUser = user;
-
-  loadDashboard();
-});
-
-/* 📊 LOAD DASHBOARD DATA */
-async function loadDashboard() {
-
-  const uid = currentUser.uid;
-
-  try {
-
-    /* DONATION HISTORY */
-    const historyRes =
-      await fetch(`${API}/history/${uid}`);
-
-    const history = await historyRes.json();
-
-    /* TOTAL DONATIONS */
-    document.getElementById("totalDonations")
-      .innerText = history.length;
-
-    /* TOTAL MEALS */
-    let meals = 0;
-
-    history.forEach(d => {
-      meals += parseInt(d.quantity) || 0;
-    });
-
-    document.getElementById("totalMeals")
-      .innerText = meals;
-
-    /* ACTIVE PICKUP */
-    const activeRes =
-      await fetch(`${API}/active/${uid}`);
-
-    const active = await activeRes.json();
-
-    if (active.length > 0) {
-
-      document.getElementById("activePickup")
-        .innerHTML = active.map(d => `
-          <p>
-            <b>${d.foodType}</b> -
-            ${d.status}
-          </p>
-        `).join("");
-
-    } else {
-
-      document.getElementById("activePickup")
-        .innerText = "No active pickup";
-    }
-
-    /* HISTORY LIST */
-    const list = history.map(d => `
-      <div class="card">
-        <p><b>${d.foodType}</b> - ${d.quantity}</p>
-        <p>Status: ${d.status}</p>
-      </div>
-    `).join("");
-
-    document.getElementById("historyList")
-      .innerHTML = list;
-
-  } catch (err) {
-    console.error(err);
-    alert("Failed to load dashboard");
-  }
+// Redirect if not logged in
+if (!donorId) {
+  window.location.href = "login.html";
 }
 
 
-/* 🍱 POST DONATION */
-window.postDonation = async function () {
 
-  const foodType =
-    document.getElementById("foodType").value;
+// ==============================
+// POST DONATION
+// ==============================
 
-  const quantity =
-    document.getElementById("quantity").value;
+async function postDonation() {
+  const foodType = document.getElementById("foodType").value;
+  const quantity = document.getElementById("quantity").value;
+  const location = document.getElementById("location").value;
 
-  const location =
-    document.getElementById("location").value;
-
-  /* VALIDATION */
   if (!foodType || !quantity || !location) {
     alert("Please fill all fields");
     return;
   }
 
-  const data = {
-    donorId: currentUser.uid,
-    foodType,
-    quantity,
-    location
-  };
-
   try {
+    const res = await fetch("http://localhost:5000/api/donations", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        donorId,
+        foodType,
+        quantity,
+        location
+      })
+    });
 
-    const res = await fetch(
-      `${API}/donate`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(data)
-      }
-    );
+    const data = await res.json();
 
     if (res.ok) {
-
-      alert("Donation Posted Successfully!");
-
-      /* CLEAR FORM */
-      document.getElementById("foodType").value = "";
-      document.getElementById("quantity").value = "";
-      document.getElementById("location").value = "";
-
-      loadDashboard();
-
+      alert("Donation posted successfully!");
+      loadDonations();
+      clearForm();
     } else {
-      alert("Failed to post donation");
+      alert(data.error || "Error posting donation");
     }
 
   } catch (err) {
     console.error(err);
-    alert("Server error");
   }
-};
+}
+
+
+
+// ==============================
+// LOAD DONATION HISTORY
+// ==============================
+
+async function loadDonations() {
+  try {
+    const res = await fetch("http://localhost:5000/api/donations");
+    const donations = await res.json();
+
+    const myDonations = donations.filter(
+      d => d.donorId === donorId
+    );
+
+    const historyDiv = document.getElementById("donationHistory");
+    historyDiv.innerHTML = "";
+
+    let total = 0;
+    let meals = 0;
+    let activePickup = "No active pickup";
+
+    myDonations.forEach(donation => {
+
+      total++;
+      meals += parseInt(donation.quantity) || 0;
+
+      if (donation.status === "Accepted") {
+        activePickup = "Pickup scheduled";
+      }
+
+      const div = document.createElement("div");
+      div.innerHTML = `
+        <p>
+          <strong>${donation.foodType}</strong> |
+          Qty: ${donation.quantity} |
+          Location: ${donation.location} |
+          Status: ${donation.status || "Pending"}
+        </p>
+        <hr>
+      `;
+
+      historyDiv.appendChild(div);
+    });
+
+    document.getElementById("totalDonations").innerText = total;
+    document.getElementById("mealsDonated").innerText = meals;
+    document.getElementById("activePickup").innerText = activePickup;
+
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+
+
+// ==============================
+// CLEAR FORM
+// ==============================
+
+function clearForm() {
+  document.getElementById("foodType").value = "";
+  document.getElementById("quantity").value = "";
+  document.getElementById("location").value = "";
+}
+
+
+
+// ==============================
+// LOGOUT
+// ==============================
+
+document.getElementById("logout").addEventListener("click", () => {
+  localStorage.removeItem("donorId");
+  window.location.href = "login.html";
+});
+
+
+
+// ==============================
+// MAKE FUNCTION GLOBAL (IMPORTANT)
+// ==============================
+
+window.postDonation = postDonation;
+
+
+
+// ==============================
+// LOAD DATA ON PAGE LOAD
+// ==============================
+
+loadDonations();
